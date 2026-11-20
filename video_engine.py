@@ -1,209 +1,212 @@
 from pathlib import Path
 import asyncio
-import json
 import shutil
 import subprocess
 import tempfile
-import textwrap
 
 from PIL import Image, ImageDraw, ImageFont, features
 
-WIDTH, HEIGHT = 1080, 1920
-BG_TOP = (8, 18, 38)
-BG_BOTTOM = (17, 42, 66)
-WHITE = (247, 249, 252)
-MUTED = (178, 194, 211)
-CYAN = (63, 220, 203)
-GOLD = (255, 195, 92)
+W, H = 1080, 1920
+NAVY = (7, 16, 34)
+BLUE = (12, 39, 69)
+CYAN = (42, 224, 207)
+WHITE = (248, 250, 255)
+MUTED = (171, 192, 211)
+GOLD = (255, 190, 78)
+RED = (238, 75, 85)
 
 
-def _run(command):
-    subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def _run(args):
+    result = subprocess.run(args, capture_output=True, text=True)
+    if result.returncode:
+        raise RuntimeError("Command failed: " + " ".join(map(str, args[:4])) + "\n" + result.stderr[-3500:])
+    return result
 
 
 def _font_path():
-    candidates = [
+    options = [
         "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
         "/usr/share/fonts/truetype/noto/NotoSansDevanagariUI-Regular.ttf",
         "/usr/share/fonts/opentype/noto/NotoSansDevanagari-Regular.ttf",
     ]
-    for path in candidates:
-        if Path(path).exists():
-            return path
-    fc_match = shutil.which("fc-match")
-    if fc_match:
-        result = subprocess.run(
-            [fc_match, "-f", "%{file}", "Noto Sans Devanagari"],
-            check=True, capture_output=True, text=True
-        )
-        path = result.stdout.strip()
-        if path and Path(path).exists():
-            return path
-    raise RuntimeError("Noto Sans Devanagari font not found. Install fonts-noto-core.")
+    for p in options:
+        if Path(p).exists():
+            return p
+    fc = shutil.which("fc-match")
+    if fc:
+        p = subprocess.run([fc, "-f", "%{file}", "Noto Sans Devanagari"],
+                           capture_output=True, text=True, check=True).stdout.strip()
+        if p and Path(p).exists():
+            return p
+    raise RuntimeError("Noto Sans Devanagari font not found.")
 
 
-def _font(size, path):
-    # Devanagari requires OpenType shaping (RAQM/HarfBuzz + FriBidi).
-    # BASIC layout renders conjuncts and matras as missing-glyph squares.
+def _font(path, size):
     if not features.check("raqm"):
-        raise RuntimeError(
-            "Pillow was built without RAQM shaping support. "
-            "Install libraqm, HarfBuzz and FriBidi before installing Pillow."
-        )
+        raise RuntimeError("Pillow RAQM is required for correct Hindi shaping.")
     return ImageFont.truetype(path, size, layout_engine=ImageFont.Layout.RAQM)
 
 
-def _gradient():
-    image = Image.new("RGB", (WIDTH, HEIGHT))
-    pixels = image.load()
-    for y in range(HEIGHT):
-        t = y / max(1, HEIGHT - 1)
-        color = tuple(int(BG_TOP[i] * (1 - t) + BG_BOTTOM[i] * t) for i in range(3))
-        for x in range(WIDTH):
-            pixels[x, y] = color
-    return image
+def _background(seed=0):
+    im = Image.new("RGB", (W, H))
+    px = im.load()
+    for y in range(H):
+        t = y / (H - 1)
+        col = tuple(int(NAVY[i] * (1-t) + BLUE[i] * t) for i in range(3))
+        for x in range(W):
+            px[x, y] = col
+    d = ImageDraw.Draw(im, "RGBA")
+    # Broadcast-style abstract radar rings and diagonal light bands.
+    cx, cy = (850 if seed % 2 else 220), (430 + seed * 170) % 1550
+    for r in (180, 270, 360, 450):
+        d.ellipse((cx-r, cy-r, cx+r, cy+r), outline=(42, 224, 207, 30), width=4)
+    for k in range(6):
+        x = -350 + k * 260 + seed * 31
+        d.polygon([(x, 0), (x+70, 0), (x+620, H), (x+550, H)], fill=(40, 105, 145, 13))
+    return im
 
 
-def _wrap(draw, text, font, max_width):
-    lines, current = [], ""
+def _wrap(draw, text, font, width):
+    lines, cur = [], ""
     for word in str(text).split():
-        trial = (current + " " + word).strip()
-        if draw.textbbox((0, 0), trial, font=font)[2] <= max_width:
-            current = trial
+        test = (cur + " " + word).strip()
+        if draw.textbbox((0, 0), test, font=font)[2] <= width:
+            cur = test
         else:
-            if current:
-                lines.append(current)
-            current = word
-    if current:
-        lines.append(current)
+            if cur:
+                lines.append(cur)
+            cur = word
+    if cur:
+        lines.append(cur)
     return lines or [""]
 
 
-def _draw_wrapped(draw, text, x, y, font, fill, max_width, line_gap=18, max_lines=8):
-    lines = _wrap(draw, text, font, max_width)[:max_lines]
+def _paragraph(draw, text, xy, font, fill, width, gap=18, limit=10):
+    x, y = xy
+    lines = _wrap(draw, text, font, width)[:limit]
     for line in lines:
-        draw.text((x, y), line, font=font, fill=fill, stroke_width=0)
+        draw.text((x, y), line, font=font, fill=fill)
         box = draw.textbbox((x, y), line, font=font)
-        y += box[3] - box[1] + line_gap
+        y += box[3] - box[1] + gap
     return y
 
 
-def _base_scene(number, label, font_path):
-    image = _gradient()
-    draw = ImageDraw.Draw(image)
-    draw.ellipse((760, -170, 1250, 320), fill=(19, 66, 83))
-    draw.ellipse((-250, 1370, 340, 1960), fill=(20, 57, 78))
-    draw.rounded_rectangle((58, 72, 1022, 1848), radius=48, outline=(43, 113, 126), width=3)
-    draw.text((100, 112), "NUSKHALO", font=_font(52, font_path), fill=CYAN)
-    draw.text((100, 183), "HEALTH • VERIFIED SOURCES", font=_font(24, font_path), fill=MUTED)
-    draw.rounded_rectangle((100, 280, 980, 360), radius=24, fill=(28, 73, 88))
-    draw.text((135, 298), label, font=_font(30, font_path), fill=WHITE)
-    draw.text((100, 1750), "HEALTH AWARENESS • REVIEW DRAFT", font=_font(24, font_path), fill=GOLD)
-    draw.text((900, 1750), f"{number:02d}/04", font=_font(24, font_path), fill=MUTED)
-    return image, draw
+def _chrome(im, scene, section, font_path):
+    d = ImageDraw.Draw(im, "RGBA")
+    d.rounded_rectangle((54, 62, 1026, 1855), radius=44,
+                        fill=(4, 12, 25, 55), outline=(69, 207, 205, 130), width=3)
+    d.text((96, 105), "NUSKHALO", font=_font(font_path, 48), fill=CYAN)
+    d.text((98, 174), "HEALTH NEWS  /  OFFICIAL SOURCES", font=_font(font_path, 23), fill=MUTED)
+    d.rounded_rectangle((95, 260, 985, 330), radius=18, fill=(21, 66, 89, 235))
+    d.text((126, 277), section.upper(), font=_font(font_path, 25), fill=WHITE)
+    # Persistent live-news ticker and draft marker.
+    d.rectangle((70, 1692, 1010, 1754), fill=(164, 34, 45, 245))
+    d.text((96, 1706), "HEALTH UPDATE", font=_font(font_path, 25), fill=WHITE)
+    d.text((700, 1706), "REVIEW DRAFT", font=_font(font_path, 25), fill=GOLD)
+    d.text((95, 1790), "NUSKHALO  •  CHECK THE ORIGINAL SOURCE", font=_font(font_path, 21), fill=MUTED)
+    d.text((930, 1790), f"{scene}/04", font=_font(font_path, 21), fill=MUTED)
+    return d
 
 
-def _make_scenes(draft, workdir, font_path, segments):
-    title = draft.get("topic") or "आज की स्वास्थ्य जानकारी"
-    summary = draft.get("source_summary_original") or "मूल स्रोत का सारांश उपलब्ध नहीं है।"
+def _make_scenes(draft, folder, fp, narration):
+    title = (draft.get("topic") or "आज की स्वास्थ्य जानकारी").strip()
+    summary = (draft.get("source_summary_original") or "मूल स्रोत का सारांश उपलब्ध नहीं है।").strip()
     domain = draft.get("source_domain") or "Official source"
-    scenes = []
+    frames = []
 
-    image, draw = _base_scene(1, "TODAY'S HEALTH UPDATE", font_path)
-    draw.text((100, 540), "नमस्कार!", font=_font(78, font_path), fill=WHITE)
-    _draw_wrapped(draw, "आज की स्वास्थ्य जानकारी — आधिकारिक स्रोत से।", 100, 700, _font(54, font_path), CYAN, 850, 28, 4)
-    draw.rounded_rectangle((100, 1120, 980, 1330), radius=34, fill=(22, 67, 81))
-    draw.text((145, 1180), "जानकारी • जागरूकता • सावधानी", font=_font(35, font_path), fill=WHITE)
-    draw.rounded_rectangle((90, 1510, 990, 1690), radius=28, fill=(10, 31, 49), outline=(63, 220, 203), width=2)
-    _draw_wrapped(draw, segments[0], 125, 1550, _font(29, font_path), WHITE, 820, 12, 3)
-    p = workdir / "scene_01.png"; image.save(p); scenes.append(p)
+    # 1 — studio-style opener, with a strong visual identity.
+    im = _background(0); d = _chrome(im, 1, "Daily health bulletin", fp)
+    d.ellipse((220, 480, 860, 1120), outline=CYAN, width=7)
+    d.ellipse((270, 530, 810, 1070), outline=(255, 255, 255), width=2)
+    d.text((360, 650), "N", font=_font(fp, 260), fill=WHITE)
+    d.text((185, 1190), "नमस्कार!", font=_font(fp, 82), fill=WHITE)
+    _paragraph(d, "आज की स्वास्थ्य खबर — भरोसेमंद आधिकारिक स्रोत से।",
+               (130, 1320), _font(fp, 43), CYAN, 820, 20, 3)
+    p=folder/"scene01.png"; im.save(p); frames.append(p)
 
-    image, draw = _base_scene(2, "THE HEADLINE", font_path)
-    draw.text((100, 500), "आज की खबर", font=_font(54, font_path), fill=GOLD)
-    _draw_wrapped(draw, title, 100, 650, _font(58, font_path), WHITE, 850, 30, 8)
-    draw.rounded_rectangle((100, 1250, 980, 1440), radius=30, fill=(23, 72, 87))
-    draw.text((145, 1315), "मूल शीर्षक • आधिकारिक रिपोर्ट", font=_font(32, font_path), fill=CYAN)
-    draw.rounded_rectangle((90, 1510, 990, 1690), radius=28, fill=(10, 31, 49), outline=(63, 220, 203), width=2)
-    _draw_wrapped(draw, segments[1], 125, 1550, _font(29, font_path), WHITE, 820, 12, 3)
-    p = workdir / "scene_02.png"; image.save(p); scenes.append(p)
+    # 2 — headline card, deliberately asymmetric and high contrast.
+    im = _background(1); d = _chrome(im, 2, "Top story", fp)
+    d.rectangle((95, 470, 112, 1390), fill=RED)
+    d.text((150, 480), "आज की बड़ी खबर", font=_font(fp, 45), fill=GOLD)
+    _paragraph(d, title, (145, 610), _font(fp, 67), WHITE, 800, 32, 9)
+    d.rounded_rectangle((145, 1270, 945, 1450), radius=24, fill=(16, 73, 93, 235))
+    d.text((185, 1320), "OFFICIAL HEALTH REPORT", font=_font(fp, 29), fill=CYAN)
+    p=folder/"scene02.png"; im.save(p); frames.append(p)
 
-    image, draw = _base_scene(3, "WHAT THE SOURCE SAYS", font_path)
-    draw.text((100, 470), "मूल स्रोत का सारांश", font=_font(48, font_path), fill=GOLD)
-    _draw_wrapped(draw, summary[:1100], 100, 590, _font(36, font_path), WHITE, 850, 20, 18)
-    draw.rounded_rectangle((90, 1510, 990, 1690), radius=28, fill=(10, 31, 49), outline=(63, 220, 203), width=2)
-    _draw_wrapped(draw, segments[2], 125, 1550, _font(29, font_path), WHITE, 820, 12, 3)
-    p = workdir / "scene_03.png"; image.save(p); scenes.append(p)
+    # 3 — information panel with editorial hierarchy.
+    im = _background(2); d = _chrome(im, 3, "What the source says", fp)
+    d.text((125, 460), "स्रोत की जानकारी", font=_font(fp, 53), fill=GOLD)
+    d.rounded_rectangle((120, 570, 960, 1510), radius=32,
+                        fill=(5, 20, 39, 220), outline=(42, 224, 207, 150), width=3)
+    # A visual quote marker and source excerpt, not invented claims.
+    d.text((165, 620), "“", font=_font(fp, 130), fill=CYAN)
+    _paragraph(d, summary[:1250], (185, 790), _font(fp, 37), WHITE, 700, 22, 19)
+    p=folder/"scene03.png"; im.save(p); frames.append(p)
 
-    image, draw = _base_scene(4, "SOURCE & SAFETY", font_path)
-    draw.text((100, 520), "स्रोत की जाँच करें", font=_font(58, font_path), fill=WHITE)
-    _draw_wrapped(draw, domain, 100, 650, _font(40, font_path), CYAN, 850, 22, 3)
-    _draw_wrapped(draw, "यह वीडियो चिकित्सा सलाह नहीं है। स्वास्थ्य संबंधी निर्णय के लिए योग्य डॉक्टर से सलाह लें।", 100, 900, _font(42, font_path), WHITE, 850, 26, 7)
-    draw.rounded_rectangle((100, 1320, 980, 1460), radius=28, fill=(91, 58, 27))
-    draw.text((140, 1365), "मानव अनुवाद और तथ्य-जाँच आवश्यक", font=_font(30, font_path), fill=GOLD)
-    draw.rounded_rectangle((90, 1510, 990, 1690), radius=28, fill=(10, 31, 49), outline=(63, 220, 203), width=2)
-    _draw_wrapped(draw, segments[3], 125, 1550, _font(29, font_path), WHITE, 820, 12, 3)
-    p = workdir / "scene_04.png"; image.save(p); scenes.append(p)
-    return scenes
+    # 4 — source accountability and safety close.
+    im = _background(3); d = _chrome(im, 4, "Source & safety", fp)
+    d.text((125, 500), "जानकारी का स्रोत", font=_font(fp, 53), fill=GOLD)
+    d.rounded_rectangle((120, 620, 960, 870), radius=28, fill=(15, 70, 91, 230))
+    _paragraph(d, domain, (165, 690), _font(fp, 42), CYAN, 740, 18, 4)
+    d.text((125, 1000), "स्वास्थ्य संबंधी सावधानी", font=_font(fp, 43), fill=WHITE)
+    _paragraph(d, "यह वीडियो चिकित्सा सलाह नहीं है। किसी भी स्वास्थ्य निर्णय से पहले योग्य डॉक्टर से सलाह लें।",
+               (125, 1110), _font(fp, 39), WHITE, 820, 25, 6)
+    d.rounded_rectangle((120, 1430, 960, 1550), radius=24, fill=(98, 58, 20, 235))
+    d.text((160, 1466), "अनुवाद और तथ्य-जाँच आवश्यक", font=_font(fp, 30), fill=GOLD)
+    p=folder/"scene04.png"; im.save(p); frames.append(p)
+    return frames
 
 
-async def _make_voice(text, audio_path):
+async def _voice(text, path):
     import edge_tts
-    communicate = edge_tts.Communicate(text, "hi-IN-MadhurNeural", rate="+2%")
-    await communicate.save(str(audio_path))
+    await edge_tts.Communicate(text, "hi-IN-MadhurNeural", rate="+0%").save(str(path))
 
 
-def _probe_duration(path):
-    result = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-         "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
-        check=True, capture_output=True, text=True
-    )
-    return max(1.0, float(result.stdout.strip()))
+def _duration(path):
+    r = _run(["ffprobe","-v","error","-show_entries","format=duration",
+              "-of","default=noprint_wrappers=1:nokey=1",str(path)])
+    return max(1.0, float(r.stdout.strip()))
 
 
 def render_video(draft, asset_root, output_path, config):
     output_path = Path(output_path)
-    print(f"Pillow RAQM shaping available: {features.check('raqm')}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    font_path = _font_path()
+    print(f"RAQM={features.check('raqm')}")
+    fp = _font_path()
     segments = draft.get("narration_segments") or [
         "नमस्कार। आप देख रहे हैं NUSKHALO हेल्थ अपडेट।",
-        f"आज की खबर का विषय है: {draft.get('topic', 'स्वास्थ्य जानकारी')}।",
-        "मूल स्रोत पढ़ें और हर तथ्य की जाँच करें।",
-        "यह चिकित्सा सलाह नहीं है। डॉक्टर से सलाह लें।",
+        f"आज की खबर का विषय है: {draft.get('topic','स्वास्थ्य जानकारी')}।",
+        "मूल स्रोत में दी गई जानकारी ध्यान से पढ़ें।",
+        "यह चिकित्सा सलाह नहीं है। डॉक्टर से सलाह लें।"
     ]
     if len(segments) != 4:
-        raise ValueError("Expected exactly four narration segments for the four-scene video.")
+        raise ValueError("Exactly four narration segments are required.")
 
     with tempfile.TemporaryDirectory(prefix="nuskhalo_") as tmp:
-        workdir = Path(tmp)
-        scenes = _make_scenes(draft, workdir, font_path, segments)
-        clips = []
-        for index, narration in enumerate(segments, start=1):
-            audio = workdir / f"voice_{index:02d}.mp3"
-            asyncio.run(_make_voice(narration, audio))
-            duration = _probe_duration(audio) + 0.35
-            clip = workdir / f"clip_{index:02d}.mp4"
-            _run([
-                "ffmpeg", "-y", "-loop", "1", "-i", str(scenes[index - 1]),
-                "-i", str(audio),
-                "-vf", "scale=1080:1920,zoompan=z='min(zoom+0.00035,1.035)':d=1:s=1080x1920:fps=25,format=yuv420p",
-                "-t", f"{duration:.2f}", "-map", "0:v:0", "-map", "1:a:0",
-                "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
-                "-c:a", "aac", "-b:a", "128k", "-shortest",
-                "-movflags", "+faststart", str(clip)
-            ])
+        folder = Path(tmp)
+        scenes = _make_scenes(draft, folder, fp, segments)
+        clips=[]
+        for i, line in enumerate(segments):
+            audio=folder/f"voice{i+1}.mp3"
+            asyncio.run(_voice(line, audio))
+            seconds=_duration(audio)+0.8
+            clip=folder/f"part{i+1}.mp4"
+            # Each panel has a distinct slow camera move; audio drives clip length.
+            zoom = "min(zoom+0.00045,1.055)" if i % 2 == 0 else "max(zoom-0.00035,1.0)"
+            _run(["ffmpeg","-y","-loop","1","-i",str(scenes[i]),"-i",str(audio),
+                  "-vf",f"zoompan=z='{zoom}':d=1:s=1080x1920:fps=25,fade=t=in:st=0:d=0.35,format=yuv420p",
+                  "-t",f"{seconds:.2f}","-map","0:v:0","-map","1:a:0",
+                  "-c:v","libx264","-preset","veryfast","-crf","19",
+                  "-c:a","aac","-b:a","160k","-shortest","-movflags","+faststart",str(clip)])
             clips.append(clip)
-
-        concat_file = workdir / "concat.txt"
-        concat_file.write_text(
-            "".join(f"file '{clip.as_posix()}'\n" for clip in clips), encoding="utf-8"
-        )
-        _run([
-            "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_file),
-            "-c", "copy", "-movflags", "+faststart", str(output_path)
-        ])
+        concat=folder/"concat.txt"
+        concat.write_text("".join(f"file '{p.as_posix()}'\n" for p in clips),encoding="utf-8")
+        _run(["ffmpeg","-y","-f","concat","-safe","0","-i",str(concat),
+              "-c","copy","-movflags","+faststart",str(output_path)])
 
     if not output_path.exists() or output_path.stat().st_size < 50000:
-        raise RuntimeError("FFmpeg did not create a valid NUSKHALO MP4.")
-    print(f"Professional four-scene review video ready: {output_path} ({output_path.stat().st_size} bytes)")
+        raise RuntimeError("MP4 validation failed: output missing or too small.")
+    probe=_run(["ffprobe","-v","error","-show_entries","stream=codec_type,width,height",
+                "-of","json",str(output_path)])
+    print("MP4_STREAMS="+probe.stdout)
+    print(f"NUSKHALO review MP4 ready: {output_path} ({output_path.stat().st_size} bytes)")
