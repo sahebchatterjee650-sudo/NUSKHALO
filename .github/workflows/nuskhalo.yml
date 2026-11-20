@@ -9,6 +9,7 @@ on:
       - "research.py"
       - "script.py"
       - "main.py"
+      - "ai_video.py"
       - "video_engine.py"
       - "requirements.txt"
       - ".github/workflows/nuskhalo.yml"
@@ -51,6 +52,7 @@ jobs:
       - name: Build NUSKHALO video preview
         env:
           TZ: Asia/Kolkata
+          RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
         run: |
           mkdir -p output
           set +e
