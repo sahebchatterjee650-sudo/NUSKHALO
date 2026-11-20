@@ -1,9 +1,10 @@
 from pathlib import Path
-import json
+import json, time
 from datetime import datetime
 from desi_topics import daily_topics
 from script import build_script
 from video_engine import render_video
+from ai_video import generate_health_broll, composite_ai_broll
 
 ROOT = Path(__file__).parent
 
@@ -21,13 +22,29 @@ def main():
         draft_path = out / f"script_{index:02d}.json"
         draft_path.write_text(json.dumps(draft, ensure_ascii=False, indent=2), encoding="utf-8")
         video_path = out / f"nuskhalo_short_{index:02d}.mp4"
+        ai_path = out / f"realistic_broll_{index:02d}.mp4"
         print(f"\n=== Building {index}/{len(topics)}: {topic['title']} ===")
         render_video(draft, ROOT / "assets", video_path, config)
+        ai_status = "disabled"
+        if config.get("ai_video_enabled", False):
+            try:
+                if generate_health_broll(topic, ai_path, config):
+                    composite_ai_broll(video_path, ai_path, int(config.get("ai_video_duration_seconds", 5)))
+                    ai_status = "realistic_ai_opening"
+                else:
+                    ai_status = "api_key_missing_graphics_fallback"
+            except Exception as exc:
+                ai_status = "failed_graphics_fallback"
+                print(f"AI_VIDEO_WARNING: {exc}")
         manifest.append({
             "number": index, "title": topic["title"], "category": topic.get("category"),
             "video": video_path.name, "script": draft_path.name,
-            "source": topic.get("source_url"), "review_status": draft["review_status"]
+            "source": topic.get("source_url"), "review_status": draft["review_status"],
+            "visual_status": ai_status
         })
+        # Agnes public free-tier video RPM is documented as low; space requests to avoid bursts.
+        if index < len(topics) and config.get("ai_video_enabled", False):
+            time.sleep(int(config.get("ai_video_request_spacing_seconds", 65)))
     report = {
         "brand": "NUSKHALO", "channel_type": "Indian Desi Health & Wellness",
         "language": "Hindi", "created_at": datetime.now().astimezone().isoformat(),
