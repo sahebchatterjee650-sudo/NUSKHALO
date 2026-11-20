@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import textwrap
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, features
 
 WIDTH, HEIGHT = 1080, 1920
 BG_TOP = (8, 18, 38)
@@ -43,7 +43,14 @@ def _font_path():
 
 
 def _font(size, path):
-    return ImageFont.truetype(path, size)
+    # Devanagari requires OpenType shaping (RAQM/HarfBuzz + FriBidi).
+    # BASIC layout renders conjuncts and matras as missing-glyph squares.
+    if not features.check("raqm"):
+        raise RuntimeError(
+            "Pillow was built without RAQM shaping support. "
+            "Install libraqm, HarfBuzz and FriBidi before installing Pillow."
+        )
+    return ImageFont.truetype(path, size, layout_engine=ImageFont.Layout.RAQM)
 
 
 def _gradient():
@@ -156,6 +163,7 @@ def _probe_duration(path):
 
 def render_video(draft, asset_root, output_path, config):
     output_path = Path(output_path)
+    print(f"Pillow RAQM shaping available: {features.check('raqm')}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     font_path = _font_path()
     segments = draft.get("narration_segments") or [
