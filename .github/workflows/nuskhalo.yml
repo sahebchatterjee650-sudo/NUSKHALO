@@ -48,7 +48,13 @@ jobs:
       - name: Build NUSKHALO video preview
         env:
           TZ: Asia/Kolkata
-        run: python main.py
+        run: |
+          mkdir -p output
+          set +e
+          python -u main.py 2>&1 | tee output/build.log
+          status=${PIPESTATUS[0]}
+          echo "NUSKHALO_BUILD_EXIT_CODE=${status}" | tee -a output/build.log
+          exit "${status}"
 
       - name: Upload draft, MP4 preview and logs
         if: always()
