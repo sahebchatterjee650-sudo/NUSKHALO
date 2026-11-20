@@ -96,12 +96,12 @@ def _chrome(im, scene, section, font_path):
     d.rounded_rectangle((54, 62, 1026, 1855), radius=44,
                         fill=(4, 12, 25, 55), outline=(69, 207, 205, 130), width=3)
     d.text((96, 105), "NUSKHALO", font=_font(font_path, 48), fill=CYAN)
-    d.text((98, 174), "HEALTH NEWS  /  OFFICIAL SOURCES", font=_font(font_path, 23), fill=MUTED)
+    d.text((98, 174), "DESI HEALTH  /  WELLNESS AWARENESS", font=_font(font_path, 23), fill=MUTED)
     d.rounded_rectangle((95, 260, 985, 330), radius=18, fill=(21, 66, 89, 235))
     d.text((126, 277), section.upper(), font=_font(font_path, 25), fill=WHITE)
     # Persistent live-news ticker and draft marker.
     d.rectangle((70, 1692, 1010, 1754), fill=(164, 34, 45, 245))
-    d.text((96, 1706), "HEALTH UPDATE", font=_font(font_path, 25), fill=WHITE)
+    d.text((96, 1706), "DESI SEHAT", font=_font(font_path, 25), fill=WHITE)
     d.text((700, 1706), "REVIEW DRAFT", font=_font(font_path, 25), fill=GOLD)
     d.text((95, 1790), "NUSKHALO  •  CHECK THE ORIGINAL SOURCE", font=_font(font_path, 21), fill=MUTED)
     d.text((930, 1790), f"{scene}/04", font=_font(font_path, 21), fill=MUTED)
@@ -120,28 +120,28 @@ def _make_scenes(draft, folder, fp, narration):
     frames = []
 
     # 1 — studio-style opener, with a strong visual identity.
-    im = _background(0); d = _chrome(im, 1, "Daily health bulletin", fp)
+    im = _background(0); d = _chrome(im, 1, "Desi health tips", fp)
     d.ellipse((220, 480, 860, 1120), outline=CYAN, width=7)
     d.ellipse((270, 530, 810, 1070), outline=(255, 255, 255), width=2)
     d.text((360, 650), "N", font=_font(fp, 260), fill=WHITE)
     d.text((185, 1190), "नमस्कार!", font=_font(fp, 82), fill=WHITE)
-    _paragraph(d, "आज की स्वास्थ्य खबर — भरोसेमंद आधिकारिक स्रोत से।",
+    _paragraph(d, "सेहत के देसी नुस्खे और आसान आदतें।",
                (130, 1320), _font(fp, 43), CYAN, 820, 20, 3)
     _caption(d, narration[0], fp)
     p=folder/"scene01.png"; im.save(p); frames.append(p)
 
     # 2 — headline card, deliberately asymmetric and high contrast.
-    im = _background(1); d = _chrome(im, 2, "Top story", fp)
+    im = _background(1); d = _chrome(im, 2, "Today’s health tip", fp)
     d.rectangle((95, 470, 112, 1390), fill=RED)
-    d.text((150, 480), "आज की बड़ी खबर", font=_font(fp, 45), fill=GOLD)
+    d.text((150, 480), "आज का देसी हेल्थ टिप", font=_font(fp, 45), fill=GOLD)
     _paragraph(d, title, (145, 610), _font(fp, 67), WHITE, 800, 32, 9)
     d.rounded_rectangle((145, 1270, 945, 1450), radius=24, fill=(16, 73, 93, 235))
-    d.text((185, 1320), "OFFICIAL HEALTH REPORT", font=_font(fp, 29), fill=CYAN)
+    d.text((185, 1320), "HEALTHY HABIT / HOME CARE", font=_font(fp, 29), fill=CYAN)
     _caption(d, narration[1], fp)
     p=folder/"scene02.png"; im.save(p); frames.append(p)
 
     # 3 — information panel with editorial hierarchy.
-    im = _background(2); d = _chrome(im, 3, "What the source says", fp)
+    im = _background(2); d = _chrome(im, 3, "जानिए आसान बात", fp)
     d.text((125, 460), "स्रोत की जानकारी", font=_font(fp, 53), fill=GOLD)
     d.rounded_rectangle((120, 570, 960, 1510), radius=32,
                         fill=(5, 20, 39, 220), outline=(42, 224, 207, 150), width=3)
@@ -152,7 +152,7 @@ def _make_scenes(draft, folder, fp, narration):
     p=folder/"scene03.png"; im.save(p); frames.append(p)
 
     # 4 — source accountability and safety close.
-    im = _background(3); d = _chrome(im, 4, "Source & safety", fp)
+    im = _background(3); d = _chrome(im, 4, "स्रोत और सावधानी", fp)
     d.text((125, 500), "जानकारी का स्रोत", font=_font(fp, 53), fill=GOLD)
     d.rounded_rectangle((120, 620, 960, 870), radius=28, fill=(15, 70, 91, 230))
     _paragraph(d, domain, (165, 690), _font(fp, 42), CYAN, 740, 18, 4)
@@ -160,7 +160,7 @@ def _make_scenes(draft, folder, fp, narration):
     _paragraph(d, "यह वीडियो चिकित्सा सलाह नहीं है। किसी भी स्वास्थ्य निर्णय से पहले योग्य डॉक्टर से सलाह लें।",
                (125, 1110), _font(fp, 39), WHITE, 820, 25, 6)
     d.rounded_rectangle((120, 1430, 960, 1550), radius=24, fill=(98, 58, 20, 235))
-    d.text((160, 1466), "अनुवाद और तथ्य-जाँच आवश्यक", font=_font(fp, 30), fill=GOLD)
+    d.text((160, 1466), "स्रोत देखें • सावधानी रखें", font=_font(fp, 30), fill=GOLD)
     _caption(d, narration[3], fp)
     p=folder/"scene04.png"; im.save(p); frames.append(p)
     return frames
