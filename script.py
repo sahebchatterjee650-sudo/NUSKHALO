@@ -1,7 +1,7 @@
 def build_script(topic, config):
-    """Create a source-grounded Hindi review draft; never invent medical advice."""
-    title = topic.get("title", "").strip()
-    summary = topic.get("summary", "").strip()
+    """Source-grounded Hindi draft; no invented medical claims."""
+    title = (topic.get("title") or "").strip()
+    summary = (topic.get("summary") or "").strip()
     domain = topic.get("source_domain", "")
     return {
         "brand": config.get("brand", "NUSKHALO"),
@@ -11,14 +11,12 @@ def build_script(topic, config):
         "published_at": topic.get("published", ""),
         "source_domain": domain,
         "source_url": topic.get("source_url", ""),
-        "hook": "आज की हेल्थ अपडेट — आधिकारिक स्रोत से।",
         "narration_segments": [
-            "नमस्कार। आप देख रहे हैं NUSKHALO हेल्थ अपडेट।",
-            f"आज की खबर का विषय है: {title}।",
-            "इस वीडियो में स्रोत की मूल जानकारी दिखाई गई है। इसे प्रकाशित करने से पहले सरल हिंदी में अनुवाद और हर स्वास्थ्य तथ्य की जाँच ज़रूरी है।",
+            "नमस्कार। आप देख रहे हैं NUSKHALO हेल्थ न्यूज़।",
+            f"आज की बड़ी खबर है: {title}।",
+            "आइए, आधिकारिक स्रोत में दी गई जानकारी को समझते हैं। प्रकाशित करने से पहले इसका सरल हिंदी अनुवाद और हर तथ्य की जाँच ज़रूरी है।",
             "यह वीडियो चिकित्सा सलाह नहीं है। स्वास्थ्य संबंधी निर्णय के लिए योग्य डॉक्टर से सलाह लें।",
         ],
-        "closing": "सही जानकारी पढ़ें। सुरक्षित रहें।",
         "sources": [topic.get("source_url", "")],
         "review_status": "needs_human_translation_and_fact_check",
         "translation_required": True,
