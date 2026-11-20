@@ -33,5 +33,10 @@
     "https://medlineplus.gov/feeds/whatsnew.xml",
     "https://medlineplus.gov/groupfeeds/new.xml",
     "https://www.nlm.nih.gov/rss/auto/ClinicalAlerts.rss"
-  ]
+  ],
+  "ai_video_enabled": true,
+  "ai_video_provider": "runway",
+  "ai_video_model": "gen4.5",
+  "ai_video_duration_seconds": 5,
+  "ai_video_timeout_seconds": 900
 }
