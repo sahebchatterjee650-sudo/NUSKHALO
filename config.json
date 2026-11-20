@@ -13,7 +13,9 @@
     "nutrition_and_wellness": 20
   },
   "feeds": [
-    "https://www.who.int/feeds/entity/mediacentre/news/en/rss.xml",
+    "https://rsshub.app/who/news",
+    "https://www.cdc.gov/media/rss.xml",
+    "https://www.who.int/rss-feeds/news-english.xml",
     "https://www.mohfw.gov.in/rss"
   ]
 }
