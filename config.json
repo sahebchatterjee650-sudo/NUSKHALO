@@ -6,6 +6,9 @@
   "video_seconds": 45,
   "resolution": "1080x1920",
   "publish_enabled": false,
+  "max_age_days": 30,
+  "minimum_summary_chars": 60,
+  "trusted_source_domains": ["who.int", "cdc.gov", "mohfw.gov.in"],
   "seasonal_regions": ["India", "United States", "United Kingdom", "Canada", "Australia", "Middle East"],
   "content_mix_percent": {
     "traditional_home_care_awareness": 50,
