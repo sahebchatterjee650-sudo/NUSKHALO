@@ -108,6 +108,11 @@ def _chrome(im, scene, section, font_path):
     return d
 
 
+def _caption(draw, text, fp):
+    draw.rounded_rectangle((105, 1515, 975, 1665), radius=24, fill=(2, 12, 26, 235), outline=(42, 224, 207, 210), width=2)
+    _paragraph(draw, text, (135, 1550), _font(fp, 27), WHITE, 805, 10, 3)
+
+
 def _make_scenes(draft, folder, fp, narration):
     title = (draft.get("topic") or "आज की स्वास्थ्य जानकारी").strip()
     summary = (draft.get("source_summary_original") or "मूल स्रोत का सारांश उपलब्ध नहीं है।").strip()
@@ -122,6 +127,7 @@ def _make_scenes(draft, folder, fp, narration):
     d.text((185, 1190), "नमस्कार!", font=_font(fp, 82), fill=WHITE)
     _paragraph(d, "आज की स्वास्थ्य खबर — भरोसेमंद आधिकारिक स्रोत से।",
                (130, 1320), _font(fp, 43), CYAN, 820, 20, 3)
+    _caption(d, narration[0], fp)
     p=folder/"scene01.png"; im.save(p); frames.append(p)
 
     # 2 — headline card, deliberately asymmetric and high contrast.
@@ -131,6 +137,7 @@ def _make_scenes(draft, folder, fp, narration):
     _paragraph(d, title, (145, 610), _font(fp, 67), WHITE, 800, 32, 9)
     d.rounded_rectangle((145, 1270, 945, 1450), radius=24, fill=(16, 73, 93, 235))
     d.text((185, 1320), "OFFICIAL HEALTH REPORT", font=_font(fp, 29), fill=CYAN)
+    _caption(d, narration[1], fp)
     p=folder/"scene02.png"; im.save(p); frames.append(p)
 
     # 3 — information panel with editorial hierarchy.
@@ -141,6 +148,7 @@ def _make_scenes(draft, folder, fp, narration):
     # A visual quote marker and source excerpt, not invented claims.
     d.text((165, 620), "“", font=_font(fp, 130), fill=CYAN)
     _paragraph(d, summary[:1250], (185, 790), _font(fp, 37), WHITE, 700, 22, 19)
+    _caption(d, narration[2], fp)
     p=folder/"scene03.png"; im.save(p); frames.append(p)
 
     # 4 — source accountability and safety close.
@@ -153,6 +161,7 @@ def _make_scenes(draft, folder, fp, narration):
                (125, 1110), _font(fp, 39), WHITE, 820, 25, 6)
     d.rounded_rectangle((120, 1430, 960, 1550), radius=24, fill=(98, 58, 20, 235))
     d.text((160, 1466), "अनुवाद और तथ्य-जाँच आवश्यक", font=_font(fp, 30), fill=GOLD)
+    _caption(d, narration[3], fp)
     p=folder/"scene04.png"; im.save(p); frames.append(p)
     return frames
 
