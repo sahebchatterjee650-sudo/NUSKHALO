@@ -9,6 +9,8 @@ on:
       - "research.py"
       - "script.py"
       - "main.py"
+      - "video_engine.py"
+      - "requirements.txt"
       - ".github/workflows/nuskhalo.yml"
   schedule:
     # 08:30 India Standard Time (03:00 UTC)
@@ -43,16 +45,16 @@ jobs:
       - name: Install Python dependencies
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
 
-      - name: Build NUSKHALO draft
+      - name: Build NUSKHALO video preview
         env:
           TZ: Asia/Kolkata
         run: python main.py
 
-      - name: Upload draft and logs
+      - name: Upload draft, MP4 preview and logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nuskhalo-draft-${{ github.run_number }}
+          name: nuskhalo-video-preview-${{ github.run_number }}
           path: output/
           if-no-files-found: warn
           retention-days: 7
