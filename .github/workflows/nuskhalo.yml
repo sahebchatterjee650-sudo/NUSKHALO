@@ -52,7 +52,7 @@ jobs:
       - name: Build NUSKHALO video preview
         env:
           TZ: Asia/Kolkata
-          RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
+          AGNES_API_KEY: ${{ secrets.AGNES_API_KEY }}
         run: |
           mkdir -p output
           set +e
