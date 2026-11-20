@@ -1,22 +1,32 @@
 from pathlib import Path
 import json
+from datetime import datetime
 from research import collect_topics
 from script import build_script
 from video_engine import render_video
 
 ROOT = Path(__file__).parent
 
+
 def main():
     config = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
     out = ROOT / config.get("output_dir", "output")
-    out.mkdir(exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
 
     topics = collect_topics(config)
     if not topics:
-        print("No suitable sourced topics found; skipping today's build.")
+        report = [
+            "NUSKHALO run report",
+            f"Time: {datetime.now().astimezone().isoformat()}",
+            "Result: No RSS candidate topics were returned.",
+            "Check the RSS diagnostic lines above for HTTP errors, empty feeds, or parse warnings.",
+            "No script/video was created. Publishing remains disabled."
+        ]
+        (out / "run_report.txt").write_text("\n".join(report) + "\n", encoding="utf-8")
+        print("No suitable sourced topics found; diagnostic report saved to output/run_report.txt.")
         return
 
-    # Conservative starter: create one draft per run; expand to 3 only after review.
+    # Conservative starter: create one draft per run; expand only after review.
     topic = topics[0]
     draft = build_script(topic, config)
     draft_path = out / "script_draft.json"
@@ -29,6 +39,7 @@ def main():
 
     render_video(draft, ROOT / "assets", out / "nuskhalo_short.mp4", config)
     print("Video rendered. Publishing remains disabled unless separately configured.")
+
 
 if __name__ == "__main__":
     main()
