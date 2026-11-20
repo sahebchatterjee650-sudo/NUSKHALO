@@ -1,0 +1,19 @@
+{
+  "brand": "NUSKHALO",
+  "language": "hi",
+  "timezone": "Asia/Kolkata",
+  "daily_target": 3,
+  "video_seconds": 45,
+  "resolution": "1080x1920",
+  "publish_enabled": false,
+  "seasonal_regions": ["India", "United States", "United Kingdom", "Canada", "Australia", "Middle East"],
+  "content_mix_percent": {
+    "traditional_home_care_awareness": 50,
+    "seasonal_prevention": 30,
+    "nutrition_and_wellness": 20
+  },
+  "feeds": [
+    "https://www.who.int/feeds/entity/mediacentre/news/en/rss.xml",
+    "https://www.mohfw.gov.in/rss"
+  ]
+}
