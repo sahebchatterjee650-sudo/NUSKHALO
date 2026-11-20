@@ -1,42 +1,23 @@
 {
   "brand": "NUSKHALO",
+  "channel_type": "Indian Desi Health & Wellness",
+  "tagline": "सेहत का देसी ज्ञान, हर दिन आसान उपाय!",
   "language": "hi",
+  "voice": "hi-IN-MadhurNeural",
   "timezone": "Asia/Kolkata",
-  "daily_target": 3,
+  "daily_target": 5,
   "video_seconds": 45,
   "resolution": "1080x1920",
+  "output_dir": "output",
   "publish_enabled": false,
-  "max_age_days": 30,
-  "minimum_summary_chars": 60,
-  "trusted_source_domains": [
-    "cdc.gov",
-    "tools.cdc.gov",
-    "medlineplus.gov",
-    "nlm.nih.gov"
-  ],
-  "seasonal_regions": [
-    "India",
-    "United States",
-    "United Kingdom",
-    "Canada",
-    "Australia",
-    "Middle East"
-  ],
-  "content_mix_percent": {
-    "traditional_home_care_awareness": 50,
-    "seasonal_prevention": 30,
-    "nutrition_and_wellness": 20
-  },
-  "feeds": [
-    "https://www2c.cdc.gov/podcasts/createrss.asp?t=r&c=183",
-    "https://tools.cdc.gov/api/v2/resources/media/132608.rss",
-    "https://medlineplus.gov/feeds/whatsnew.xml",
-    "https://medlineplus.gov/groupfeeds/new.xml",
-    "https://www.nlm.nih.gov/rss/auto/ClinicalAlerts.rss"
-  ],
-  "ai_video_enabled": true,
-  "ai_video_provider": "agnes",
-  "ai_video_model": "agnes-video-2.5-flash",
-  "ai_video_duration_seconds": 5,
-  "ai_video_timeout_seconds": 900
+  "human_review_required": true,
+  "ai_video_enabled": false,
+  "ai_video_provider": "disabled",
+  "content_mode": "curated_evergreen_indian_home_remedies_nutrition_recipes",
+  "medical_safety": {
+    "no_cure_guarantees": true,
+    "no_medication_replacement": true,
+    "require_source_links": true,
+    "require_human_review_before_publish": true
+  }
 }
