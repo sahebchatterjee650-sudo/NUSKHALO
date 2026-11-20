@@ -2,6 +2,13 @@ name: NUSKHALO Daily Draft
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "config.json"
+      - "research.py"
+      - "main.py"
+      - ".github/workflows/nuskhalo.yml"
   schedule:
     # 08:30 India Standard Time (03:00 UTC)
     - cron: "0 3 * * *"
