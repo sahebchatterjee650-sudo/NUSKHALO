@@ -40,10 +40,13 @@ jobs:
       - name: Install FFmpeg and Hindi fonts
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra
+          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra libraqm0 libharfbuzz0b libfribidi0
 
       - name: Install Python dependencies
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Verify Devanagari text shaping support
+        run: python -c "from PIL import ImageFont, features; assert features.check('raqm'), 'Pillow RAQM support missing'; print('RAQM shaping OK')"
 
       - name: Build NUSKHALO video preview
         env:
