@@ -8,17 +8,30 @@
   "publish_enabled": false,
   "max_age_days": 30,
   "minimum_summary_chars": 60,
-  "trusted_source_domains": ["who.int", "cdc.gov", "mohfw.gov.in"],
-  "seasonal_regions": ["India", "United States", "United Kingdom", "Canada", "Australia", "Middle East"],
+  "trusted_source_domains": [
+    "cdc.gov",
+    "tools.cdc.gov",
+    "medlineplus.gov",
+    "nlm.nih.gov"
+  ],
+  "seasonal_regions": [
+    "India",
+    "United States",
+    "United Kingdom",
+    "Canada",
+    "Australia",
+    "Middle East"
+  ],
   "content_mix_percent": {
     "traditional_home_care_awareness": 50,
     "seasonal_prevention": 30,
     "nutrition_and_wellness": 20
   },
   "feeds": [
-    "https://rsshub.app/who/news",
-    "https://www.cdc.gov/media/rss.xml",
-    "https://www.who.int/rss-feeds/news-english.xml",
-    "https://www.mohfw.gov.in/rss"
+    "https://www2c.cdc.gov/podcasts/createrss.asp?t=r&c=183",
+    "https://tools.cdc.gov/api/v2/resources/media/132608.rss",
+    "https://medlineplus.gov/feeds/whatsnew.xml",
+    "https://medlineplus.gov/groupfeeds/new.xml",
+    "https://www.nlm.nih.gov/rss/auto/ClinicalAlerts.rss"
   ]
 }
