@@ -1,10 +1,9 @@
 from pathlib import Path
 import json
 from datetime import datetime
-from research import collect_topics
+from desi_topics import daily_topics
 from script import build_script
 from video_engine import render_video
-from ai_video import generate_health_broll, composite_ai_broll
 
 ROOT = Path(__file__).parent
 
@@ -12,35 +11,36 @@ def main():
     config = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
     out = ROOT / config.get("output_dir", "output")
     out.mkdir(parents=True, exist_ok=True)
-    topics = collect_topics(config)
-    if not topics:
-        report = [
-            "NUSKHALO run report",
-            f"Time: {datetime.now().astimezone().isoformat()}",
-            "Result: No fresh, trusted RSS candidate topics were returned.",
-            "Check RSS diagnostics above. No video can be made without a sourced topic.",
-            "Publishing remains disabled."
-        ]
-        (out / "run_report.txt").write_text("\n".join(report) + "\n", encoding="utf-8")
-        print("No suitable sourced topics found; diagnostic report saved.")
-        return
-    topic = topics[0]
-    draft = build_script(topic, config)
-    ai_path = out / "ai_health_broll.mp4"
-    ai_ready = generate_health_broll(topic, ai_path, config)
-    draft["ai_video_status"] = "generated" if ai_ready else "api_key_missing_motion_graphics_fallback"
-    draft_path = out / "script_draft.json"
-    draft_path.write_text(json.dumps(draft, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Draft created: {draft_path}")
-    video_path = out / "nuskhalo_preview.mp4"
-    render_video(draft, ROOT / "assets", video_path, config)
-    if ai_ready:
-        composite_ai_broll(video_path, ai_path, int(config.get("ai_video_duration_seconds", 5)))
-    print(f"Review preview created: {video_path}")
-    if draft.get("review_status") != "approved":
-        print("Human translation and medical fact-check still required. Publishing is paused.")
-        return
-    print("Draft marked approved. Publishing remains disabled unless separately configured.")
+    count = int(config.get("daily_target", 5))
+    topics = daily_topics(count)
+    manifest = []
+    for index, topic in enumerate(topics, start=1):
+        draft = build_script(topic, config)
+        draft["video_number"] = index
+        draft["created_at"] = datetime.now().astimezone().isoformat()
+        draft_path = out / f"script_{index:02d}.json"
+        draft_path.write_text(json.dumps(draft, ensure_ascii=False, indent=2), encoding="utf-8")
+        video_path = out / f"nuskhalo_short_{index:02d}.mp4"
+        print(f"\n=== Building {index}/{len(topics)}: {topic['title']} ===")
+        render_video(draft, ROOT / "assets", video_path, config)
+        manifest.append({
+            "number": index, "title": topic["title"], "category": topic.get("category"),
+            "video": video_path.name, "script": draft_path.name,
+            "source": topic.get("source_url"), "review_status": draft["review_status"]
+        })
+    report = {
+        "brand": "NUSKHALO", "channel_type": "Indian Desi Health & Wellness",
+        "language": "Hindi", "created_at": datetime.now().astimezone().isoformat(),
+        "videos_created": len(manifest), "publishing_enabled": False,
+        "videos": manifest,
+        "note": "Human review is required before publishing. This workflow does not diagnose or promise cures."
+    }
+    (out / "daily_manifest.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    (out / "run_report.txt").write_text(
+        f"NUSKHALO DESI HEALTH RUN\nVideos created: {len(manifest)}\n"
+        "Language: Hindi\nPublishing: DISABLED\nHuman review: REQUIRED\n", encoding="utf-8"
+    )
+    print(f"Created {len(manifest)} Hindi health-awareness Shorts. Publishing remains disabled.")
 
 if __name__ == "__main__":
     main()
