@@ -96,7 +96,7 @@ def _base_scene(number, label, font_path):
     return image, draw
 
 
-def _make_scenes(draft, workdir, font_path):
+def _make_scenes(draft, workdir, font_path, segments):
     title = draft.get("topic") or "आज की स्वास्थ्य जानकारी"
     summary = draft.get("source_summary_original") or "मूल स्रोत का सारांश उपलब्ध नहीं है।"
     domain = draft.get("source_domain") or "Official source"
@@ -107,19 +107,19 @@ def _make_scenes(draft, workdir, font_path):
     _draw_wrapped(draw, "आज की स्वास्थ्य जानकारी — आधिकारिक स्रोत से।", 100, 700, _font(54, font_path), CYAN, 850, 28, 4)
     draw.rounded_rectangle((100, 1120, 980, 1330), radius=34, fill=(22, 67, 81))
     draw.text((145, 1180), "जानकारी • जागरूकता • सावधानी", font=_font(35, font_path), fill=WHITE)
-    p = workdir / "scene_01.png"; image.save(p); scenes.append(p)
+    draw.rounded_rectangle((90, 1510, 990, 1690), radius=28, fill=(10, 31, 49), outline=(63, 220, 203), width=2)\n    _draw_wrapped(draw, segments[0], 125, 1550, _font(29, font_path), WHITE, 820, 12, 3)\n    p = workdir / "scene_01.png"; image.save(p); scenes.append(p)
 
     image, draw = _base_scene(2, "THE HEADLINE", font_path)
     draw.text((100, 500), "आज की खबर", font=_font(54, font_path), fill=GOLD)
     _draw_wrapped(draw, title, 100, 650, _font(58, font_path), WHITE, 850, 30, 8)
     draw.rounded_rectangle((100, 1250, 980, 1440), radius=30, fill=(23, 72, 87))
     draw.text((145, 1315), "मूल शीर्षक • आधिकारिक रिपोर्ट", font=_font(32, font_path), fill=CYAN)
-    p = workdir / "scene_02.png"; image.save(p); scenes.append(p)
+    draw.rounded_rectangle((90, 1510, 990, 1690), radius=28, fill=(10, 31, 49), outline=(63, 220, 203), width=2)\n    _draw_wrapped(draw, segments[1], 125, 1550, _font(29, font_path), WHITE, 820, 12, 3)\n    p = workdir / "scene_02.png"; image.save(p); scenes.append(p)
 
     image, draw = _base_scene(3, "WHAT THE SOURCE SAYS", font_path)
     draw.text((100, 470), "मूल स्रोत का सारांश", font=_font(48, font_path), fill=GOLD)
     _draw_wrapped(draw, summary[:1100], 100, 590, _font(36, font_path), WHITE, 850, 20, 18)
-    p = workdir / "scene_03.png"; image.save(p); scenes.append(p)
+    draw.rounded_rectangle((90, 1510, 990, 1690), radius=28, fill=(10, 31, 49), outline=(63, 220, 203), width=2)\n    _draw_wrapped(draw, segments[2], 125, 1550, _font(29, font_path), WHITE, 820, 12, 3)\n    p = workdir / "scene_03.png"; image.save(p); scenes.append(p)
 
     image, draw = _base_scene(4, "SOURCE & SAFETY", font_path)
     draw.text((100, 520), "स्रोत की जाँच करें", font=_font(58, font_path), fill=WHITE)
@@ -127,7 +127,7 @@ def _make_scenes(draft, workdir, font_path):
     _draw_wrapped(draw, "यह वीडियो चिकित्सा सलाह नहीं है। स्वास्थ्य संबंधी निर्णय के लिए योग्य डॉक्टर से सलाह लें।", 100, 900, _font(42, font_path), WHITE, 850, 26, 7)
     draw.rounded_rectangle((100, 1320, 980, 1460), radius=28, fill=(91, 58, 27))
     draw.text((140, 1365), "मानव अनुवाद और तथ्य-जाँच आवश्यक", font=_font(30, font_path), fill=GOLD)
-    p = workdir / "scene_04.png"; image.save(p); scenes.append(p)
+    draw.rounded_rectangle((90, 1510, 990, 1690), radius=28, fill=(10, 31, 49), outline=(63, 220, 203), width=2)\n    _draw_wrapped(draw, segments[3], 125, 1550, _font(29, font_path), WHITE, 820, 12, 3)\n    p = workdir / "scene_04.png"; image.save(p); scenes.append(p)
     return scenes
 
 
@@ -161,7 +161,7 @@ def render_video(draft, asset_root, output_path, config):
 
     with tempfile.TemporaryDirectory(prefix="nuskhalo_") as tmp:
         workdir = Path(tmp)
-        scenes = _make_scenes(draft, workdir, font_path)
+        scenes = _make_scenes(draft, workdir, font_path, segments)
         clips = []
         for index, narration in enumerate(segments, start=1):
             audio = workdir / f"voice_{index:02d}.mp3"
