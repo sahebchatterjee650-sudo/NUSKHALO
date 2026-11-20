@@ -1,37 +1,24 @@
-# NUSKHALO Automation
+# NUSKHALO — Desi Health & Wellness Shorts
 
-Hindi-first, seasonal health-awareness Shorts/Reels workflow.
+Hindi-first Indian channel about practical home-care awareness, seasonal foods, healthy Indian recipes, food safety and everyday wellness.
 
-## Important
-This is a starter scaffold, not a live publishing system. Uploading is disabled until platform credentials are configured and tested. Health claims must be evidence-checked; never present home remedies as guaranteed cures or advise stopping prescribed treatment.
+Tagline: **सेहत का देसी ज्ञान, हर दिन आसान उपाय!**
 
-## Initial workflow
-1. Collect candidate topics from configured public RSS feeds.
-2. Generate or edit a Hindi script (AI provider is optional and deliberately not wired to a paid API).
-3. Review the script and sources.
-4. Render a vertical video from licensed clips/assets with FFmpeg.
-5. Review the output.
-6. Enable YouTube/Meta publishing only after credentials and platform permissions are configured.
+## Daily workflow
+- Creates 5 vertical 1080x1920 Hindi Shorts drafts per scheduled run.
+- Uses a curated evergreen topic bank with source links (WHO, NHS, NIH/NCCIH).
+- Uses Hindi TTS (Edge TTS, hi-IN-MadhurNeural) and animated motion-graphic scenes.
+- Saves one script JSON per video plus a daily manifest.
+- Publishing is disabled. Human review is required before any upload.
 
-## Local setup
-- Python 3.11+
-- FFmpeg installed and available on PATH
-
-```bash
-python -m venv .venv
-# Windows: .venv\\Scripts\\activate
-# macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-copy .env.example .env
-python main.py
-```
-
-Place only licensed/owned video clips in `assets/clips/`. The renderer uses multiple clips, motion/crop, captions and audio where supplied. It does not turn a single still image into a fake medical demonstration.
+## Health safety
+- Home remedies are not described as guaranteed cures.
+- No diagnosis, medication changes, or advice to stop prescribed treatment.
+- Evidence limitations and important cautions are included in scripts.
+- Verify each script and source before publishing. This is general awareness, not medical advice.
 
 ## GitHub Actions
-The workflow runs a dry-run build. GitHub-hosted runners have time/storage limits; this is not guaranteed always-on compute. Do not add API keys to source files. Use repository Secrets.
+Runs daily at 08:30 IST and can be started manually. Artifacts contain MP4 drafts, scripts, and logs. The current build uses no paid video-generation API and does not need an API key.
 
-## Publishing
-- YouTube: requires OAuth consent and YouTube Data API setup.
-- Facebook/Instagram: requires Meta app setup, eligible Page/Instagram professional account, permissions and access tokens.
-- Upload functions are intentionally placeholders until you provide and verify those account settings.
+## Limitations
+The current renderer creates motion-graphic scenes with Hindi narration; it does not yet create full cinematic AI footage. TTS/network availability and GitHub runner limits can affect a run.
