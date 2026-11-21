@@ -1,7 +1,7 @@
 from pathlib import Path
 import json, time
 from datetime import datetime
-from desi_topics import daily_topics
+from desi_topics import daily_topics, TOPICS
 from script import build_script
 from video_engine import render_video
 from ai_video import generate_health_broll, composite_ai_broll
@@ -13,7 +13,14 @@ def main():
     out = ROOT / config.get("output_dir", "output")
     out.mkdir(parents=True, exist_ok=True)
     count = int(config.get("daily_target", 5))
-    topics = daily_topics(count)
+    if config.get("test_mode", False):
+        test_id = config.get("test_topic_id", "honey-cough")
+        topics = [item for item in TOPICS if item.get("id") == test_id][:1]
+        if not topics:
+            raise ValueError(f"Configured test_topic_id not found: {test_id}")
+        print(f"TEST MODE: building exactly one video for topic {test_id}")
+    else:
+        topics = daily_topics(count)
     manifest = []
     for index, topic in enumerate(topics, start=1):
         draft = build_script(topic, config)
