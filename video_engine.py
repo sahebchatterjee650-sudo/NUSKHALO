@@ -41,10 +41,35 @@ def _font_path():
     raise RuntimeError("Noto Sans Devanagari font not found.")
 
 
+def _latin_font_path():
+    options = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+        "/usr/share/fonts/opentype/noto/NotoSans-Regular.ttf",
+    ]
+    for p in options:
+        if Path(p).exists():
+            return p
+    fc = shutil.which("fc-match")
+    if fc:
+        p = subprocess.run([fc, "-f", "%{file}", "DejaVu Sans"],
+                           capture_output=True, text=True, check=True).stdout.strip()
+        if p and Path(p).exists():
+            return p
+    raise RuntimeError("A Latin fallback font was not found.")
+
+
 def _font(path, size):
     if not features.check("raqm"):
         raise RuntimeError("Pillow RAQM is required for correct Hindi shaping.")
     return ImageFont.truetype(path, size, layout_engine=ImageFont.Layout.RAQM)
+
+
+def _font_for(text, size, devanagari_path):
+    # Use a Latin font for Latin-only labels (for example NHS / source domains).
+    if not any("\u0900" <= ch <= "\u097f" for ch in str(text)):
+        return _font(_latin_font_path(), size)
+    return _font(devanagari_path, size)
 
 
 def _background(seed=0):
@@ -98,7 +123,7 @@ def _chrome(im, scene, section, font_path):
     d.text((96, 105), "नुस्खालो", font=_font(font_path, 48), fill=CYAN)
     d.text((98, 174), "देसी सेहत • स्वास्थ्य जागरूकता", font=_font(font_path, 23), fill=MUTED)
     d.rounded_rectangle((95, 260, 985, 330), radius=18, fill=(21, 66, 89, 235))
-    d.text((126, 277), section.upper(), font=_font(font_path, 25), fill=WHITE)
+    d.text((126, 277), section, font=_font_for(section, 25, font_path), fill=WHITE)
     # Persistent live-news ticker and draft marker.
     d.rectangle((70, 1692, 1010, 1754), fill=(164, 34, 45, 245))
     d.text((96, 1706), "देसी सेहत", font=_font(font_path, 25), fill=WHITE)
@@ -116,14 +141,14 @@ def _caption(draw, text, fp):
 def _make_scenes(draft, folder, fp, narration):
     title = (draft.get("topic") or "आज की स्वास्थ्य जानकारी").strip()
     summary = (draft.get("source_summary_original") or "मूल स्रोत का सारांश उपलब्ध नहीं है।").strip()
-    domain = draft.get("source_domain") or "Official source"
+    domain = draft.get("source_domain") or "आधिकारिक स्रोत"
     frames = []
 
     # 1 — studio-style opener, with a strong visual identity.
-    im = _background(0); d = _chrome(im, 1, "Desi health tips", fp)
+    im = _background(0); d = _chrome(im, 1, "आज की सेहत जानकारी", fp)
     d.ellipse((220, 480, 860, 1120), outline=CYAN, width=7)
     d.ellipse((270, 530, 810, 1070), outline=(255, 255, 255), width=2)
-    d.text((360, 650), "N", font=_font(fp, 260), fill=WHITE)
+    d.text((330, 650), "नु", font=_font(fp, 220), fill=WHITE)
     d.text((185, 1190), "नमस्कार!", font=_font(fp, 82), fill=WHITE)
     _paragraph(d, "सेहत के देसी नुस्खे और आसान आदतें।",
                (130, 1320), _font(fp, 43), CYAN, 820, 20, 3)
@@ -131,7 +156,7 @@ def _make_scenes(draft, folder, fp, narration):
     p=folder/"scene01.png"; im.save(p); frames.append(p)
 
     # 2 — headline card, deliberately asymmetric and high contrast.
-    im = _background(1); d = _chrome(im, 2, "Today’s health tip", fp)
+    im = _background(1); d = _chrome(im, 2, "आज का स्वास्थ्य सुझाव", fp)
     d.rectangle((95, 470, 112, 1390), fill=RED)
     d.text((150, 480), "आज का देसी हेल्थ टिप", font=_font(fp, 45), fill=GOLD)
     _paragraph(d, title, (145, 610), _font(fp, 67), WHITE, 800, 32, 9)
@@ -155,7 +180,7 @@ def _make_scenes(draft, folder, fp, narration):
     im = _background(3); d = _chrome(im, 4, "स्रोत और सावधानी", fp)
     d.text((125, 500), "जानकारी का स्रोत", font=_font(fp, 53), fill=GOLD)
     d.rounded_rectangle((120, 620, 960, 870), radius=28, fill=(15, 70, 91, 230))
-    _paragraph(d, domain, (165, 690), _font(fp, 42), CYAN, 740, 18, 4)
+    _paragraph(d, domain, (165, 690), _font_for(domain, 42, fp), CYAN, 740, 18, 4)
     d.text((125, 1000), "स्वास्थ्य संबंधी सावधानी", font=_font(fp, 43), fill=WHITE)
     _paragraph(d, "यह वीडियो चिकित्सा सलाह नहीं है। किसी भी स्वास्थ्य निर्णय से पहले योग्य डॉक्टर से सलाह लें।",
                (125, 1110), _font(fp, 39), WHITE, 820, 25, 6)
