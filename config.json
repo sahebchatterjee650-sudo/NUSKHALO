@@ -5,7 +5,7 @@
   "language": "hi",
   "voice": "hi-IN-MadhurNeural",
   "timezone": "Asia/Kolkata",
-  "daily_target": 5,
+  "daily_target": 1,
   "video_seconds": 45,
   "resolution": "1080x1920",
   "output_dir": "output",
@@ -14,14 +14,16 @@
   "ai_video_enabled": true,
   "ai_video_provider": "agnes",
   "ai_video_model": "agnes-video-2.5-flash",
-  "ai_video_duration_seconds": 5,
+  "ai_video_duration_seconds": 8,
   "ai_video_timeout_seconds": 900,
-  "ai_video_request_spacing_seconds": 65,
+  "ai_video_request_spacing_seconds": 90,
   "content_mode": "curated_evergreen_indian_home_remedies_nutrition_recipes",
   "medical_safety": {
     "no_cure_guarantees": true,
     "no_medication_replacement": true,
     "require_source_links": true,
     "require_human_review_before_publish": true
-  }
+  },
+  "test_mode": true,
+  "test_topic_id": "honey-cough"
 }
