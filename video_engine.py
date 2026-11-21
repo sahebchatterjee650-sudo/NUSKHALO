@@ -95,15 +95,15 @@ def _chrome(im, scene, section, font_path):
     d = ImageDraw.Draw(im, "RGBA")
     d.rounded_rectangle((54, 62, 1026, 1855), radius=44,
                         fill=(4, 12, 25, 55), outline=(69, 207, 205, 130), width=3)
-    d.text((96, 105), "NUSKHALO", font=_font(font_path, 48), fill=CYAN)
-    d.text((98, 174), "DESI HEALTH  /  WELLNESS AWARENESS", font=_font(font_path, 23), fill=MUTED)
+    d.text((96, 105), "नुस्खालो", font=_font(font_path, 48), fill=CYAN)
+    d.text((98, 174), "देसी सेहत • स्वास्थ्य जागरूकता", font=_font(font_path, 23), fill=MUTED)
     d.rounded_rectangle((95, 260, 985, 330), radius=18, fill=(21, 66, 89, 235))
     d.text((126, 277), section.upper(), font=_font(font_path, 25), fill=WHITE)
     # Persistent live-news ticker and draft marker.
     d.rectangle((70, 1692, 1010, 1754), fill=(164, 34, 45, 245))
-    d.text((96, 1706), "DESI SEHAT", font=_font(font_path, 25), fill=WHITE)
-    d.text((700, 1706), "REVIEW DRAFT", font=_font(font_path, 25), fill=GOLD)
-    d.text((95, 1790), "NUSKHALO  •  CHECK THE ORIGINAL SOURCE", font=_font(font_path, 21), fill=MUTED)
+    d.text((96, 1706), "देसी सेहत", font=_font(font_path, 25), fill=WHITE)
+    d.text((700, 1706), "जाँच हेतु ड्राफ्ट", font=_font(font_path, 25), fill=GOLD)
+    d.text((95, 1790), "नुस्खालो • मूल स्रोत ज़रूर देखें", font=_font(font_path, 21), fill=MUTED)
     d.text((930, 1790), f"{scene}/04", font=_font(font_path, 21), fill=MUTED)
     return d
 
@@ -136,7 +136,7 @@ def _make_scenes(draft, folder, fp, narration):
     d.text((150, 480), "आज का देसी हेल्थ टिप", font=_font(fp, 45), fill=GOLD)
     _paragraph(d, title, (145, 610), _font(fp, 67), WHITE, 800, 32, 9)
     d.rounded_rectangle((145, 1270, 945, 1450), radius=24, fill=(16, 73, 93, 235))
-    d.text((185, 1320), "HEALTHY HABIT / HOME CARE", font=_font(fp, 29), fill=CYAN)
+    d.text((185, 1320), "सेहतमंद आदत • घरेलू देखभाल", font=_font(fp, 29), fill=CYAN)
     _caption(d, narration[1], fp)
     p=folder/"scene02.png"; im.save(p); frames.append(p)
 
