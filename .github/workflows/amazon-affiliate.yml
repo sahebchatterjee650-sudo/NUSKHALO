@@ -1,0 +1,44 @@
+name: NUSKHALO Amazon Affiliate Product Video Drafts
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 4 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nuskhalo-amazon-affiliate-drafts
+  cancel-in-progress: false
+
+jobs:
+  build-product-drafts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install FFmpeg and Hindi fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra libraqm0 libharfbuzz0b libfribidi0
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      - name: Build one Hindi Amazon product video draft
+        env:
+          TZ: Asia/Kolkata
+        run: python -u amazon_affiliate_video.py
+      - name: Upload video and description for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuskhalo-amazon-product-drafts-${{ github.run_number }}
+          path: output/amazon/
+          if-no-files-found: warn
+          retention-days: 7
