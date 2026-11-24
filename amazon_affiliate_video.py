@@ -115,10 +115,15 @@ def make_video(product, output):
 def main():
     catalog = json.loads((ROOT / "amazon_products.json").read_text(encoding="utf-8"))
     products = catalog.get("products", [])
-    if not products:
-        raise SystemExit("NO_PRODUCTS: add one reviewed product with an Amazon Associates Special Link to amazon_products.json")
     out = ROOT / "output" / "amazon"
     out.mkdir(parents=True, exist_ok=True)
+    if not products:
+        (out / "SETUP_REQUIRED.txt").write_text(
+            "No product has been added yet. Add a reviewed Amazon.in product and your own Associates Special Link to amazon_products.json. No upload or public post was made.\n",
+            encoding="utf-8"
+        )
+        print("NO_PRODUCTS: saved setup instructions; no upload or public post was made.")
+        return
     report = []
     for i, p in enumerate(products[:1], 1):
         required = ["asin", "name_hi", "original_features_hi", "hindi_narration", "affiliate_url"]
